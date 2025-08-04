@@ -13,7 +13,6 @@ public interface QueueFactoryInterface {
     String EXECUTION_EVENT_NAMED = "executionEventQueue";
     String WORKERJOB_NAMED = "workerJobQueue";
     String WORKERTASKRESULT_NAMED = "workerTaskResultQueue";
-    String WORKERTRIGGERRESULT_NAMED = "workerTriggerResultQueue";
     String FLOW_NAMED = "flowQueue";
     String WORKERTASKLOG_NAMED = "workerTaskLogQueue";
     String METRIC_QUEUE = "workerTaskMetricQueue";
@@ -34,8 +33,6 @@ public interface QueueFactoryInterface {
     WorkerJobQueueInterface workerJob();
 
     QueueInterface<WorkerTaskResult> workerTaskResult();
-
-    QueueInterface<WorkerTriggerResult> workerTriggerResult();
 
     QueueInterface<LogEntry> logEntry();
 

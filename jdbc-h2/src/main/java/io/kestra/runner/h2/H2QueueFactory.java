@@ -66,14 +66,6 @@ public class H2QueueFactory implements QueueFactoryInterface {
 
     @Override
     @Singleton
-    @Named(QueueFactoryInterface.WORKERTRIGGERRESULT_NAMED)
-    @Bean(preDestroy = "close")
-    public QueueInterface<WorkerTriggerResult> workerTriggerResult() {
-        return new H2WorkerTriggerResultQueue(applicationContext);
-    }
-
-    @Override
-    @Singleton
     @Named(QueueFactoryInterface.WORKERTASKLOG_NAMED)
     @Bean(preDestroy = "close")
     public QueueInterface<LogEntry> logEntry() {

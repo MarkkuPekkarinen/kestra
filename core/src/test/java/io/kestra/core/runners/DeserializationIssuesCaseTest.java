@@ -1,7 +1,6 @@
 package io.kestra.core.runners;
 
 import io.kestra.core.models.flows.FlowInterface;
-import io.kestra.core.models.flows.FlowWithSource;
 import io.kestra.core.models.flows.State;
 import io.kestra.core.queues.QueueException;
 import io.kestra.core.queues.QueueFactoryInterface;
@@ -218,10 +217,6 @@ public class DeserializationIssuesCaseTest {
     protected QueueInterface<WorkerTaskResult> workerTaskResultQueue;
 
     @Inject
-    @Named(QueueFactoryInterface.WORKERTRIGGERRESULT_NAMED)
-    protected QueueInterface<WorkerTriggerResult> workerTriggerResultQueue;
-
-    @Inject
     @Named(QueueFactoryInterface.FLOW_NAMED)
     protected QueueInterface<FlowInterface> flowQueue;
 
@@ -247,24 +242,6 @@ public class DeserializationIssuesCaseTest {
         assertThat(workerTaskResult.get().getTaskRun().getState().getHistories().size()).isEqualTo(2);
         assertThat(workerTaskResult.get().getTaskRun().getState().getHistories().getFirst().getState()).isEqualTo(State.Type.CREATED);
         assertThat(workerTaskResult.get().getTaskRun().getState().getCurrent()).isEqualTo(State.Type.FAILED);
-    }
-
-    public void workerTriggerDeserializationIssue(Consumer<QueueMessage> sendToQueue) throws TimeoutException, QueueException{
-        AtomicReference<WorkerTriggerResult> workerTriggerResult = new AtomicReference<>();
-        Flux<WorkerTriggerResult> receive = TestsUtils.receive(workerTriggerResultQueue, either -> {
-            if (either != null) {
-                workerTriggerResult.set(either.getLeft());
-            }
-        });
-
-        sendToQueue.accept(new QueueMessage(WorkerJob.class, INVALID_WORKER_TRIGGER_KEY, INVALID_WORKER_TRIGGER_VALUE));
-
-        Await.until(
-            () -> workerTriggerResult.get() != null,
-            Duration.ofMillis(100),
-            Duration.ofMinutes(1)
-        );
-        receive.blockLast();
     }
 
     public void flowDeserializationIssue(Consumer<QueueMessage> sendToQueue) throws Exception {

@@ -56,7 +56,7 @@ class TriggerTest {
                 }
             });
 
-            worker.run();
+            worker.start(1, null);
 
             assertTrue(queueCount.await(1, TimeUnit.MINUTES));
             receive.blockLast();
@@ -81,7 +81,7 @@ class TriggerTest {
                 }
             });
 
-            worker.run();
+            worker.start(1, null);
 
             assertTrue(queueCount.await(1, TimeUnit.MINUTES));
             receive.blockLast();

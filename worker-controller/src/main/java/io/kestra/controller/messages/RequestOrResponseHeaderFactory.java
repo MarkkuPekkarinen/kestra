@@ -1,0 +1,31 @@
+package io.kestra.controller.messages;
+
+import io.kestra.core.contexts.KestraContext;
+import io.kestra.controller.grpc.RequestOrResponseHeader;
+import io.kestra.core.worker.models.WorkerContext;
+
+import java.util.UUID;
+
+/**
+ * Factory class for creating instances of {@link RequestOrResponseHeader}.
+ */
+public class RequestOrResponseHeaderFactory {
+
+    /**
+     * Creates a new {@link RequestOrResponseHeader} instance with the given worker context.
+     *
+     * @param workerContext the context of the worker providing details such as worker ID
+     *                      required for constructing the header.
+     * @return a {@link RequestOrResponseHeader} instance initialized with client-specific
+     *         fields and metadata.
+     */
+    public static RequestOrResponseHeader create(WorkerContext workerContext) {
+        return RequestOrResponseHeader
+            .newBuilder()
+            .setClientId(workerContext.workerId())
+            .setClientVersion(KestraContext.getContext().getVersion())
+            .setMessageFormat(MessageFormats.JSON.name())
+            .setCorrelationId(UUID.randomUUID().toString())
+            .build();
+    }
+}

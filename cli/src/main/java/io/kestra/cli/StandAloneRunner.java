@@ -5,7 +5,6 @@ import io.kestra.core.server.Service;
 import io.kestra.core.utils.Await;
 import io.kestra.core.utils.ExecutorsUtils;
 import io.kestra.executor.DefaultExecutor;
-import io.kestra.worker.DefaultWorker;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.annotation.Value;
 import jakarta.annotation.PreDestroy;
@@ -17,7 +16,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -53,11 +51,8 @@ public class StandAloneRunner implements Runnable, AutoCloseable {
         poolExecutor.execute(applicationContext.getBean(DefaultExecutor.class));
 
         if (workerEnabled) {
-            // FIXME: For backward-compatibility with Kestra 0.15.x and earliest we still used UUID for Worker ID instead of IdUtils
-            String workerID = UUID.randomUUID().toString();
-            Worker worker = applicationContext.createBean(DefaultWorker.class, workerID, workerThread, null);
-            applicationContext.registerSingleton(worker); //
-            poolExecutor.execute(worker);
+            Worker worker = applicationContext.getBean(Worker.class);
+            poolExecutor.execute(() -> worker.start(workerThread, null));
             servers.add(worker);
         }
 
