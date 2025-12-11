@@ -6,6 +6,7 @@ import io.kestra.core.models.flows.FlowWithException;
 import io.kestra.core.models.flows.FlowWithSource;
 import io.kestra.core.services.PluginDefaultService;
 import io.micronaut.context.annotation.Bean;
+import jakarta.annotation.PreDestroy;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import io.kestra.core.queues.QueueFactoryInterface;
@@ -25,8 +26,7 @@ import jakarta.inject.Singleton;
 
 @Singleton
 @Slf4j
-@Bean(preDestroy = "close")
-public class FlowListeners implements FlowListenersInterface, AutoCloseable {
+public class FlowListeners implements FlowListenersInterface {
     private final QueueInterface<FlowInterface> flowQueue;
     private final List<FlowWithSource> flows;
     private final List<Consumer<List<FlowWithSource>>> consumers = new ArrayList<>();
@@ -50,6 +50,7 @@ public class FlowListeners implements FlowListenersInterface, AutoCloseable {
     public void run() {
         synchronized (this) {
             if (queueListenerCancellation == null) {
+                log.info("STARTING FLOW LISTENER: {}", this);
                 queueListenerCancellation = this.flowQueue.receive(either -> {
                     FlowWithSource flow;
                     if (either.isRight()) {
@@ -155,10 +156,17 @@ public class FlowListeners implements FlowListenersInterface, AutoCloseable {
         return new ArrayList<>(this.flows);
     }
 
+    @PreDestroy
     @Override
     public void close() throws Exception {
-        if (queueListenerCancellation != null) {
-            queueListenerCancellation.run();
+        synchronized (this) {
+            boolean b = queueListenerCancellation != null;
+            log.info("THREAD STACKTRACE: {}", (Object) Thread.currentThread().getStackTrace());
+            log.info("LISTENER NOT NULL : {}", b);
+            log.info("LISTENER THIS : {}", this);
+            if (b) {
+                queueListenerCancellation.run();
+            }
         }
     }
 }

@@ -19,6 +19,7 @@ import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -59,7 +60,7 @@ public class JdbcScheduler extends AbstractScheduler {
         });
 
         // No-op consumption of the trigger queue, so the events are purged from the queue
-        this.triggerQueue.receive(Scheduler.class, trigger -> { });
+        this.receiveCancellations.add(this.triggerQueue.receive(Scheduler.class, trigger -> { }));
     }
 
     @Override
