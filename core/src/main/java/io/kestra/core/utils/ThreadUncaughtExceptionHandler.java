@@ -11,21 +11,17 @@ public final class ThreadUncaughtExceptionHandler implements UncaughtExceptionHa
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
-        boolean isTest = KestraContext.getContext().getEnvironments().contains("test");
-
         try {
             // cannot use FormattingLogger due to a dependency loop
-            log.error("Caught an exception in {}. {}", t, isTest ? "Keeping it running for test." : "Shutting down.", e);
+            log.error("Caught an exception in {}. Shutting down.", t, e);
         } catch (Throwable errorInLogging) {
             // If logging fails, e.g. due to missing memory, at least try to log the
             // message and the cause for the failed logging.
             System.err.println(e.getMessage());
             System.err.println(errorInLogging.getMessage());
         } finally {
-            if (!isTest) {
-                KestraContext.getContext().shutdown();
-                Runtime.getRuntime().exit(1);
-            }
+            KestraContext.getContext().shutdown();
+            Runtime.getRuntime().exit(1);
         }
     }
 }
