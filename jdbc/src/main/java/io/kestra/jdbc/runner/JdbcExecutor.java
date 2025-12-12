@@ -1056,7 +1056,9 @@ public class JdbcExecutor implements ExecutorInterface {
             log.error("Unable to kill the execution {}", killedExecution.getExecutionId(), e);
         }
 
+        log.error("KILLING FROM EXECUTOR");
         Executor executor = killingOrAfterKillState(killedExecution.getExecutionId(), Optional.ofNullable(killedExecution.getExecutionState()));
+        log.error("KILLED FROM EXECUTOR");
 
         // Check whether kill event should be propagated to downstream executions.
         // By default, always propagate the ExecutionKill to sub-flows (for backward compatibility).
@@ -1083,20 +1085,24 @@ public class JdbcExecutor implements ExecutorInterface {
     }
 
     private Executor killingOrAfterKillState(final String executionId, Optional<State.Type> afterKillState) {
-        return executionRepository.lock(executionId, pair -> {
-            Execution currentExecution = pair.getLeft();
-            FlowInterface flow = flowMetaStore.findByExecution(currentExecution).orElseThrow();
+        try {
+            return executionRepository.lock(executionId, pair -> {
+                Execution currentExecution = pair.getLeft();
+                FlowInterface flow = flowMetaStore.findByExecution(currentExecution).orElseThrow();
 
-            // remove it from the queued store if it was queued so it would not be restarted
-            if (currentExecution.getState().isQueued()) {
-                executionQueuedStorage.remove(currentExecution);
-            }
+                // remove it from the queued store if it was queued so it would not be restarted
+                if (currentExecution.getState().isQueued()) {
+                    executionQueuedStorage.remove(currentExecution);
+                }
 
-            Execution killing = executionService.kill(currentExecution, flow, afterKillState);
-            Executor current = new Executor(currentExecution, null)
-                .withExecution(killing, "joinKillingExecution");
-            return Pair.of(current, pair.getRight());
-        });
+                Execution killing = executionService.kill(currentExecution, flow, afterKillState);
+                Executor current = new Executor(currentExecution, null)
+                    .withExecution(killing, "joinKillingExecution");
+                return Pair.of(current, pair.getRight());
+            });
+        } catch (Exception e) {
+            throw new RuntimeException("ISSUE WHILE KILLING EXECUTION " + executionId, e);
+        }
     }
 
     private void toExecution(Executor executor) {
